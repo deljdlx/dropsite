@@ -16,7 +16,6 @@ L'edge doit être lancé **en premier** (il crée le réseau `web`) :
 # 1) Edge Traefik
 cd traefik
 cp -n .env.example .env
-bash certs/generate.sh          # cert wildcard self-signed (dev)
 docker compose up -d
 
 # 2) Sandbox
@@ -34,8 +33,9 @@ echo '<?php phpinfo();' > sandbox/sites/monsite/public/index.php
 ```
 
 Le TLD `.localhost` résout automatiquement vers `127.0.0.1` : aucune config DNS.
-Le certificat étant self-signed en dev, le navigateur affiche un avertissement
-(ou installer `mkcert` pour un cert de confiance, cf. `traefik/certs/generate.sh`).
+En dev, préférer le **HTTP** (`http://monsite.localhost`) : le HTTPS utilise le
+certificat interne auto-généré par Traefik → avertissement navigateur (normal).
+Le HTTPS de confiance est géré en prod par ACME (voir [DEPLOY.md](DEPLOY.md)).
 
 ## URLs (dev)
 
@@ -82,15 +82,7 @@ Config Vite type (assets servis à l'app PHP, cf. `sites/demo/vite.config.js`) :
 `server.origin = http://vite.localhost` et `server.hmr = { host: vite.localhost, clientPort: 80, protocol: ws }`.
 La page PHP charge alors `http://vite.localhost/@vite/client` et son entrée JS.
 
-## Prod (à finaliser)
+## Prod
 
-Le domaine est paramétré par `DOMAIN` dans les deux `.env`. Le certificat wildcard
-prod passe par **ACME DNS-01**, dont le provider reste **à brancher** :
-
-1. Renseigner `ACME_DNS_PROVIDER` (ex. `cloudflare`, `ovh`…) dans `traefik/.env`.
-2. Fournir les credentials du provider au conteneur Traefik (variables
-   d'environnement dédiées, cf. doc Traefik du provider).
-3. Ajouter `tls.certResolver: letsencrypt` aux routers concernés.
-
-Tant que ce n'est pas fait, seul le dev (cert self-signed) fonctionne.
-```
+Le déploiement serveur (edge partagé, HTTPS wildcard via ACME DNS-01) est décrit
+pas-à-pas dans **[DEPLOY.md](DEPLOY.md)**.

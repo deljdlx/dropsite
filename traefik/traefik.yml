@@ -38,14 +38,15 @@ providers:
 # Seul le token du provider reste secret et passe par l'environnement (lu
 # directement par lego), cf. GANDIV5_PERSONAL_ACCESS_TOKEN dans .env.
 # Inerte en dev : aucun routeur local ne référence ce résolveur.
-# caServer = staging Let's Encrypt (test) ; passer en prod une fois validé :
-#   prod -> https://acme-v02.api.letsencrypt.org/directory
+# caServer = PRODUCTION Let's Encrypt. Pour tester sans consommer les quotas,
+# décommenter la ligne staging (et vider acme/acme.json avant de rebasculer) :
+#   staging -> https://acme-staging-v02.api.letsencrypt.org/directory
 certificatesResolvers:
   letsencrypt:
     acme:
       email: "deljdlx@gmail.com"
       storage: /etc/traefik/acme/acme.json
-      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      caServer: "https://acme-v02.api.letsencrypt.org/directory"
       dnsChallenge:
         provider: gandiv5
         resolvers:

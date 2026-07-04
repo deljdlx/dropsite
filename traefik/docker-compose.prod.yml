@@ -10,9 +10,15 @@ services:
       # Credentials du provider Gandi (lus par lego). Secret -> uniquement dans .env.
       GANDIV5_PERSONAL_ACCESS_TOKEN: "${GANDIV5_PERSONAL_ACCESS_TOKEN}"
     labels:
-      # Demande le certificat wildcard sur le routeur dashboard. Une fois obtenu,
-      # il est servi par SNI à TOUS les sous-domaines *.${DOMAIN} (sites
-      # dynamiques compris) — les autres routeurs gardent juste `tls: true`.
-      traefik.http.routers.dashboard-secure.tls.certresolver: "letsencrypt"
-      traefik.http.routers.dashboard-secure.tls.domains[0].main: "${DOMAIN}"
-      traefik.http.routers.dashboard-secure.tls.domains[0].sans: "*.${DOMAIN}"
+      # Routeur DÉDIÉ à l'acquisition du certificat wildcard (DNS-01).
+      # Il ne porte QUE des sous-clés `tls.*` (jamais `tls: true`) : sur un même
+      # routeur, la clé `tls` ne peut pas être à la fois une feuille (`=true`) et
+      # un nœud (`.certresolver`) — sinon la config TLS devient invalide et l'ACME
+      # ne reçoit aucun domaine. Le cert obtenu va dans le store et est servi par
+      # SNI à tous les autres routeurs *.${DOMAIN} (qui gardent `tls: true`).
+      traefik.http.routers.dropsite-wildcard.rule: "Host(`wildcard.${DOMAIN}`)"
+      traefik.http.routers.dropsite-wildcard.entrypoints: "websecure"
+      traefik.http.routers.dropsite-wildcard.service: "api@internal"
+      traefik.http.routers.dropsite-wildcard.tls.certresolver: "letsencrypt"
+      traefik.http.routers.dropsite-wildcard.tls.domains[0].main: "${DOMAIN}"
+      traefik.http.routers.dropsite-wildcard.tls.domains[0].sans: "*.${DOMAIN}"
