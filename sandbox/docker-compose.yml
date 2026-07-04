@@ -27,28 +27,30 @@ services:
       # --- Router wildcard : tous les sous-domaines -> Apache (PHP, port 80) ---
       # Priorité basse : les routers exacts (dashboard, mailpit, vite) passent devant.
       # HTTP (dev, sans avertissement de cert) + HTTPS (self-signed dev / ACME prod).
-      traefik.http.routers.sandbox.rule: "HostRegexp(`^.+\\.${DOMAIN}$`)"
-      traefik.http.routers.sandbox.priority: "1"
-      traefik.http.routers.sandbox.entrypoints: "web"
-      traefik.http.routers.sandbox.service: "sandbox"
-      traefik.http.routers.sandbox-secure.rule: "HostRegexp(`^.+\\.${DOMAIN}$`)"
-      traefik.http.routers.sandbox-secure.priority: "1"
-      traefik.http.routers.sandbox-secure.entrypoints: "websecure"
-      traefik.http.routers.sandbox-secure.tls: "true"
-      traefik.http.routers.sandbox-secure.service: "sandbox"
-      traefik.http.services.sandbox.loadbalancer.server.port: "80"
+      # Noms préfixés `dropsite-` : indispensable sur un edge Traefik partagé
+      # (évite toute collision avec les routeurs d'autres stacks).
+      traefik.http.routers.dropsite.rule: "HostRegexp(`^.+\\.${DOMAIN}$`)"
+      traefik.http.routers.dropsite.priority: "1"
+      traefik.http.routers.dropsite.entrypoints: "web"
+      traefik.http.routers.dropsite.service: "dropsite"
+      traefik.http.routers.dropsite-secure.rule: "HostRegexp(`^.+\\.${DOMAIN}$`)"
+      traefik.http.routers.dropsite-secure.priority: "1"
+      traefik.http.routers.dropsite-secure.entrypoints: "websecure"
+      traefik.http.routers.dropsite-secure.tls: "true"
+      traefik.http.routers.dropsite-secure.service: "dropsite"
+      traefik.http.services.dropsite.loadbalancer.server.port: "80"
       # --- Vite dev server (HMR) -> vite.${DOMAIN} vers le port 5173 du conteneur ---
       # Démarré à la demande : docker compose exec apache sh -c 'cd sites/<slug> && npm run dev'
-      traefik.http.routers.vite.rule: "Host(`vite.${DOMAIN}`)"
-      traefik.http.routers.vite.priority: "950"
-      traefik.http.routers.vite.entrypoints: "web"
-      traefik.http.routers.vite.service: "vite"
-      traefik.http.routers.vite-secure.rule: "Host(`vite.${DOMAIN}`)"
-      traefik.http.routers.vite-secure.priority: "950"
-      traefik.http.routers.vite-secure.entrypoints: "websecure"
-      traefik.http.routers.vite-secure.tls: "true"
-      traefik.http.routers.vite-secure.service: "vite"
-      traefik.http.services.vite.loadbalancer.server.port: "5173"
+      traefik.http.routers.dropsite-vite.rule: "Host(`vite.${DOMAIN}`)"
+      traefik.http.routers.dropsite-vite.priority: "950"
+      traefik.http.routers.dropsite-vite.entrypoints: "web"
+      traefik.http.routers.dropsite-vite.service: "dropsite-vite"
+      traefik.http.routers.dropsite-vite-secure.rule: "Host(`vite.${DOMAIN}`)"
+      traefik.http.routers.dropsite-vite-secure.priority: "950"
+      traefik.http.routers.dropsite-vite-secure.entrypoints: "websecure"
+      traefik.http.routers.dropsite-vite-secure.tls: "true"
+      traefik.http.routers.dropsite-vite-secure.service: "dropsite-vite"
+      traefik.http.services.dropsite-vite.loadbalancer.server.port: "5173"
 
   mysql:
     image: mysql:8
@@ -76,14 +78,14 @@ services:
       traefik.enable: "true"
       traefik.docker.network: "web"
       # UI Mailpit sur mail.${DOMAIN}, priorité au-dessus du wildcard.
-      traefik.http.routers.mailpit.rule: "Host(`mail.${DOMAIN}`)"
-      traefik.http.routers.mailpit.priority: "900"
-      traefik.http.routers.mailpit.entrypoints: "web"
-      traefik.http.routers.mailpit-secure.rule: "Host(`mail.${DOMAIN}`)"
-      traefik.http.routers.mailpit-secure.priority: "900"
-      traefik.http.routers.mailpit-secure.entrypoints: "websecure"
-      traefik.http.routers.mailpit-secure.tls: "true"
-      traefik.http.services.mailpit.loadbalancer.server.port: "8025"
+      traefik.http.routers.dropsite-mailpit.rule: "Host(`mail.${DOMAIN}`)"
+      traefik.http.routers.dropsite-mailpit.priority: "900"
+      traefik.http.routers.dropsite-mailpit.entrypoints: "web"
+      traefik.http.routers.dropsite-mailpit-secure.rule: "Host(`mail.${DOMAIN}`)"
+      traefik.http.routers.dropsite-mailpit-secure.priority: "900"
+      traefik.http.routers.dropsite-mailpit-secure.entrypoints: "websecure"
+      traefik.http.routers.dropsite-mailpit-secure.tls: "true"
+      traefik.http.services.dropsite-mailpit.loadbalancer.server.port: "8025"
 
 networks:
   web:
