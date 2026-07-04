@@ -32,17 +32,7 @@ providers:
     directory: /etc/traefik/dynamic
     watch: true
 
-# Résolveur ACME wildcard via DNS-01.
-# ⚠️ Le provider DNS n'est pas encore branché : tant que ACME_DNS_PROVIDER et les
-# credentials ne sont pas fournis (voir .env), ce résolveur ne délivrera pas de
-# certificat. Le dev fonctionne sans (cert self-signed via dynamic/tls.yml).
-certificatesResolvers:
-  letsencrypt:
-    acme:
-      email: "${ACME_EMAIL}"
-      storage: /etc/traefik/acme/acme.json
-      dnsChallenge:
-        provider: "${ACME_DNS_PROVIDER}"
-        resolvers:
-          - "1.1.1.1:53"
-          - "8.8.8.8:53"
+# Le résolveur ACME `letsencrypt` (DNS-01 wildcard) N'EST PAS défini ici :
+# le fichier statique n'expanse pas les ${...}. Il est configuré par variables
+# d'environnement dans docker-compose.prod.yml (là où compose substitue), ce qui
+# évite de figer des valeurs prod dans ce fichier partagé avec le dev.
