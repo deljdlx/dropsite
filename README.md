@@ -10,26 +10,25 @@ sandbox/    ← ferme de sites (Apache mod_php + mod_vhost_alias, MySQL, Mailpit
 
 ## Démarrer
 
-L'edge doit être lancé **en premier** (il crée le réseau `web`) :
+Le plus simple, via le **Makefile** (`make help` liste tout) :
 
 ```bash
-# 1) Edge Traefik
-cd traefik
-cp -n .env.example .env
-docker compose up -d
+make init    # prépare les .env
+make up      # démarre l'edge + la sandbox (dev, localhost)
+```
 
-# 2) Sandbox
-cd ../sandbox
-cp -n .env.example .env
-docker compose up -d
+Équivalent manuel (l'edge d'abord — il crée le réseau `web`) :
+
+```bash
+cd traefik  && cp -n .env.example .env && docker compose up -d
+cd ../sandbox && cp -n .env.example .env && docker compose up -d
 ```
 
 ## Ajouter un site
 
 ```bash
-mkdir -p sandbox/sites/monsite/public
-echo '<?php phpinfo();' > sandbox/sites/monsite/public/index.php
-# → https://monsite.localhost   (aucun redémarrage)
+make site name=monsite        # scaffold sandbox/sites/monsite/public/index.php
+# → http://monsite.localhost   (aucun redémarrage)
 ```
 
 Le TLD `.localhost` résout automatiquement vers `127.0.0.1` : aucune config DNS.

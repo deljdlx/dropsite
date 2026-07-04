@@ -7,6 +7,11 @@ Guide pour déployer `dropsite` sur un serveur où **Traefik est l'edge partagé
 > serveur**. On commite en local → push GitHub → `git pull` sur le serveur.
 > Seuls les fichiers hors-git restent locaux au serveur : `traefik/.env`
 > (secrets) et `traefik/acme/` (certificats), tous deux gitignorés.
+>
+> Les commandes ci-dessous existent aussi en raccourcis **`make`** (voir
+> `make help`) : `make prod-up`, `make prod-logs`, `make prod-cert DOMAIN=...`,
+> `make prod-cert-reset`. Elles encapsulent le double `-f` et le vidage root de
+> `acme.json`.
 
 ## 1. Prérequis serveur
 
