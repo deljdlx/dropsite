@@ -1,17 +1,12 @@
-# Override PROD de l'edge Traefik — ACME DNS-01 wildcard (Let's Encrypt via Gandi).
+# Override PROD de l'edge Traefik — active l'ACME DNS-01 wildcard (via Gandi).
+# Le résolveur `letsencrypt` est défini dans traefik.yml ; ici on ne fait que :
+#   1) fournir le token secret du provider (lu par lego depuis l'environnement)
+#   2) demander le certificat wildcard sur le routeur dashboard
 # Lancement sur le serveur :
 #   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-#
-# Le résolveur est défini par variables d'environnement TRAEFIK_* (le fichier
-# statique traefik.yml n'expanse pas les ${...} ; compose, si).
 services:
   traefik:
     environment:
-      TRAEFIK_CERTIFICATESRESOLVERS_letsencrypt_ACME_EMAIL: "${ACME_EMAIL}"
-      TRAEFIK_CERTIFICATESRESOLVERS_letsencrypt_ACME_STORAGE: "/etc/traefik/acme/acme.json"
-      # URL de l'autorité ACME : staging pour tester (quotas larges), puis prod.
-      TRAEFIK_CERTIFICATESRESOLVERS_letsencrypt_ACME_CASERVER: "${ACME_CA_SERVER}"
-      TRAEFIK_CERTIFICATESRESOLVERS_letsencrypt_ACME_DNSCHALLENGE_PROVIDER: "${ACME_DNS_PROVIDER}"
       # Credentials du provider Gandi (lus par lego). Secret -> uniquement dans .env.
       GANDIV5_PERSONAL_ACCESS_TOKEN: "${GANDIV5_PERSONAL_ACCESS_TOKEN}"
     labels:

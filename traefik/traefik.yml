@@ -32,7 +32,22 @@ providers:
     directory: /etc/traefik/dynamic
     watch: true
 
-# Le résolveur ACME `letsencrypt` (DNS-01 wildcard) N'EST PAS défini ici :
-# le fichier statique n'expanse pas les ${...}. Il est configuré par variables
-# d'environnement dans docker-compose.prod.yml (là où compose substitue), ce qui
-# évite de figer des valeurs prod dans ce fichier partagé avec le dev.
+# Résolveur ACME `letsencrypt` — DNS-01 wildcard.
+# Défini ici (et non par env) car Traefik lit sa config statique depuis une SEULE
+# source : dès qu'un fichier est monté, les variables TRAEFIK_* sont ignorées.
+# Seul le token du provider reste secret et passe par l'environnement (lu
+# directement par lego), cf. GANDIV5_PERSONAL_ACCESS_TOKEN dans .env.
+# Inerte en dev : aucun routeur local ne référence ce résolveur.
+# caServer = staging Let's Encrypt (test) ; passer en prod une fois validé :
+#   prod -> https://acme-v02.api.letsencrypt.org/directory
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "deljdlx@gmail.com"
+      storage: /etc/traefik/acme/acme.json
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+      dnsChallenge:
+        provider: gandiv5
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"
