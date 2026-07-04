@@ -1,0 +1,48 @@
+# Configuration statique de Traefik (edge mutualisé).
+# Le routage applicatif se fait par labels Docker (provider docker) et par le
+# provider file (dossier dynamic/).
+
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+log:
+  level: INFO
+
+api:
+  dashboard: true
+
+entryPoints:
+  web:
+    address: ":80"
+    # En prod on redirigera systématiquement vers HTTPS. En dev on laisse le
+    # HTTP passer pour éviter les avertissements de cert self-signed.
+  websecure:
+    address: ":443"
+
+providers:
+  # Découverte des conteneurs sur le réseau `web`. Rien n'est exposé sans
+  # `traefik.enable=true` explicite.
+  docker:
+    exposedByDefault: false
+    network: web
+    watch: true
+  # Configuration dynamique par fichiers (TLS, middlewares).
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+# Résolveur ACME wildcard via DNS-01.
+# ⚠️ Le provider DNS n'est pas encore branché : tant que ACME_DNS_PROVIDER et les
+# credentials ne sont pas fournis (voir .env), ce résolveur ne délivrera pas de
+# certificat. Le dev fonctionne sans (cert self-signed via dynamic/tls.yml).
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: "${ACME_EMAIL}"
+      storage: /etc/traefik/acme/acme.json
+      dnsChallenge:
+        provider: "${ACME_DNS_PROVIDER}"
+        resolvers:
+          - "1.1.1.1:53"
+          - "8.8.8.8:53"

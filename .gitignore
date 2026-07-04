@@ -1,0 +1,10 @@
+# Secrets & état runtime
+**/.env
+traefik/acme/
+traefik/certs/*.crt
+traefik/certs/*.key
+
+# Dépendances des sites
+**/node_modules/
+**/vendor/
+**/dist/

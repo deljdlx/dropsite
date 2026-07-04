@@ -1,0 +1,44 @@
+# Stack EDGE — Traefik reverse-proxy mutualisé.
+# Possède le réseau `web` que les autres stacks rejoignent (external: true).
+# À lancer EN PREMIER : docker compose up -d
+
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      ACME_EMAIL: "${ACME_EMAIL:-admin@example.com}"
+      # Provider DNS pour l'ACME wildcard prod. Vide en dev (resolver inactif).
+      ACME_DNS_PROVIDER: "${ACME_DNS_PROVIDER:-}"
+    volumes:
+      # Lecture seule de l'API Docker pour la découverte des conteneurs.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic:/etc/traefik/dynamic:ro
+      - ./certs:/etc/traefik/certs:ro
+      - ./acme:/etc/traefik/acme
+    networks:
+      - web
+    labels:
+      traefik.enable: "true"
+      # --- Dashboard sur traefik.${DOMAIN} ---
+      # Priorité élevée pour ne pas être happé par un router wildcard d'une stack.
+      traefik.http.routers.dashboard.rule: "Host(`traefik.${DOMAIN}`)"
+      traefik.http.routers.dashboard.priority: "1000"
+      traefik.http.routers.dashboard.entrypoints: "web"
+      traefik.http.routers.dashboard.service: "api@internal"
+      traefik.http.routers.dashboard-secure.rule: "Host(`traefik.${DOMAIN}`)"
+      traefik.http.routers.dashboard-secure.priority: "1000"
+      traefik.http.routers.dashboard-secure.entrypoints: "websecure"
+      traefik.http.routers.dashboard-secure.tls: "true"
+      traefik.http.routers.dashboard-secure.service: "api@internal"
+
+networks:
+  # Réseau partagé, possédé par cette stack. Nom explicite `web` pour que les
+  # autres stacks puissent le référencer en external.
+  web:
+    name: web

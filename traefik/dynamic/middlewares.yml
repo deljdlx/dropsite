@@ -1,0 +1,16 @@
+# Middlewares réutilisables par les stacks.
+http:
+  middlewares:
+    # Redirige HTTP -> HTTPS. À appliquer en prod ; en dev on l'omet pour éviter
+    # les avertissements de cert self-signed.
+    https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    # En-têtes de sécurité de base.
+    security-headers:
+      headers:
+        frameDeny: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: strict-origin-when-cross-origin

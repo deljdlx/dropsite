@@ -1,0 +1,95 @@
+# Stack SANDBOX — ferme de sites dynamiques (Apache mod_php + mod_vhost_alias).
+# Rejoint le réseau `web` possédé par l'edge Traefik (lancer l'edge d'abord).
+#   1 dossier dans sites/<slug>/public  =  https://<slug>.${DOMAIN}
+
+services:
+  apache:
+    build: ./apache
+    container_name: sandbox-apache
+    restart: unless-stopped
+    volumes:
+      # Les sites, montés depuis l'hôte : créer un dossier suffit à publier.
+      - ./sites:/var/www/sites
+    environment:
+      DOMAIN: "${DOMAIN:-docker.localhost}"
+    extra_hosts:
+      # Permet à Xdebug (dans le conteneur) de joindre l'IDE sur l'hôte.
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mysql
+      - mailpit
+    networks:
+      - web
+      - internal
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "web"
+      # --- Router wildcard : tous les sous-domaines -> Apache (PHP, port 80) ---
+      # Priorité basse : les routers exacts (dashboard, mailpit, vite) passent devant.
+      # HTTP (dev, sans avertissement de cert) + HTTPS (self-signed dev / ACME prod).
+      traefik.http.routers.sandbox.rule: "HostRegexp(`^.+\\.${DOMAIN}$`)"
+      traefik.http.routers.sandbox.priority: "1"
+      traefik.http.routers.sandbox.entrypoints: "web"
+      traefik.http.routers.sandbox.service: "sandbox"
+      traefik.http.routers.sandbox-secure.rule: "HostRegexp(`^.+\\.${DOMAIN}$`)"
+      traefik.http.routers.sandbox-secure.priority: "1"
+      traefik.http.routers.sandbox-secure.entrypoints: "websecure"
+      traefik.http.routers.sandbox-secure.tls: "true"
+      traefik.http.routers.sandbox-secure.service: "sandbox"
+      traefik.http.services.sandbox.loadbalancer.server.port: "80"
+      # --- Vite dev server (HMR) -> vite.${DOMAIN} vers le port 5173 du conteneur ---
+      # Démarré à la demande : docker compose exec apache sh -c 'cd sites/<slug> && npm run dev'
+      traefik.http.routers.vite.rule: "Host(`vite.${DOMAIN}`)"
+      traefik.http.routers.vite.priority: "950"
+      traefik.http.routers.vite.entrypoints: "web"
+      traefik.http.routers.vite.service: "vite"
+      traefik.http.routers.vite-secure.rule: "Host(`vite.${DOMAIN}`)"
+      traefik.http.routers.vite-secure.priority: "950"
+      traefik.http.routers.vite-secure.entrypoints: "websecure"
+      traefik.http.routers.vite-secure.tls: "true"
+      traefik.http.routers.vite-secure.service: "vite"
+      traefik.http.services.vite.loadbalancer.server.port: "5173"
+
+  mysql:
+    image: mysql:8
+    container_name: sandbox-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE:-sandbox}"
+      MYSQL_USER: "${MYSQL_USER:-sandbox}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD:-sandbox}"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - internal
+    # Pas de port hôte publié (accès interne au réseau, évite les conflits).
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: sandbox-mailpit
+    restart: unless-stopped
+    networks:
+      - web
+      - internal
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "web"
+      # UI Mailpit sur mail.${DOMAIN}, priorité au-dessus du wildcard.
+      traefik.http.routers.mailpit.rule: "Host(`mail.${DOMAIN}`)"
+      traefik.http.routers.mailpit.priority: "900"
+      traefik.http.routers.mailpit.entrypoints: "web"
+      traefik.http.routers.mailpit-secure.rule: "Host(`mail.${DOMAIN}`)"
+      traefik.http.routers.mailpit-secure.priority: "900"
+      traefik.http.routers.mailpit-secure.entrypoints: "websecure"
+      traefik.http.routers.mailpit-secure.tls: "true"
+      traefik.http.services.mailpit.loadbalancer.server.port: "8025"
+
+networks:
+  web:
+    external: true
+  internal:
+    driver: bridge
+
+volumes:
+  mysql-data:
