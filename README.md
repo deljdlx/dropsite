@@ -56,8 +56,9 @@ Le conteneur `sandbox-apache` embarque une vraie toolchain de dev :
 
 - **PHP 8.5** (mod_php) + extensions : `pdo_mysql`, `mysqli`, `intl`, `gd`,
   `bcmath`, `exif`, `pcntl`, `zip`, `opcache`.
-- **Xdebug** actif en permanence (mode `debug,develop`, `start_with_request=yes`),
-  se connecte à l'IDE sur `host.docker.internal:9003` (idekey `VSCODE`).
+- **Xdebug** installé mais **off par défaut** (prod-safe, zéro overhead).
+  Pour débugger : `XDEBUG_MODE=develop,debug` dans `sandbox/.env` (se connecte à
+  l'IDE sur `host.docker.internal:9003`, idekey `VSCODE`).
 - **Composer 2**, **Node 22 LTS**, **npm**, **corepack** (pnpm / yarn).
 
 Exécuter les outils dans le conteneur :

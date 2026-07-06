@@ -12,6 +12,9 @@ services:
       - ./sites:/var/www/sites
     environment:
       DOMAIN: "${DOMAIN:-docker.localhost}"
+      # Mode Xdebug : off par défaut (prod-safe, zéro overhead). En dev, mettre
+      # XDEBUG_MODE=develop,debug dans sandbox/.env pour activer le debug.
+      XDEBUG_MODE: "${XDEBUG_MODE:-off}"
     extra_hosts:
       # Permet à Xdebug (dans le conteneur) de joindre l'IDE sur l'hôte.
       - "host.docker.internal:host-gateway"

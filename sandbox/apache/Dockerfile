@@ -23,8 +23,11 @@ RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # --- Modules Apache : vhost_alias (docroot dynamique), rewrite, headers ---
+# ServerName fixe : évite le reverse-DNS de l'IP au démarrage (warning FQDN +
+# délai à froid).
 RUN a2enmod vhost_alias rewrite headers \
-    && a2dissite 000-default
+    && a2dissite 000-default \
+    && echo 'ServerName localhost' >> /etc/apache2/apache2.conf
 
 # --- Courrier PHP -> Mailpit (service `mailpit`, port SMTP 1025) ---
 RUN printf '%s\n' \
