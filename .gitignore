@@ -8,3 +8,8 @@ traefik/certs/*.key
 **/node_modules/
 **/vendor/
 **/dist/
+
+# Sites déposés dans sandbox/sites : tout ignoré (POCs clonés, souvent leurs
+# propres dépôts git) SAUF le site `demo` de référence, qui reste versionné.
+sandbox/sites/*
+!sandbox/sites/demo/
